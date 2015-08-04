@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>.craft Viewer</title>
+  </head>
+  <body>
+  <script src="build/js/three.js"></script>   
+	 <script src="build/js/OrbitControls.js"></script>		
+	<script src="build/js/scene.js"></script>		
+	<script src="build/js/part.js"></script>		
+	<script src="build/js/craft.js"></script>		
+	<script src="build/js/main.js"></script>		
+
+	<script>
+  var path = './build/js';
+  var fs = require('fs');
+
+  fs.watch(path, function() {
+    if (location)
+      location.reload();
+  });
+</script>
+  </body>
+</html>
