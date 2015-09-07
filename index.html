@@ -1,24 +1,36 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>.craft Viewer</title>
-  </head>
+<head></head>
   <body>
-  <script src="build/js/three.js"></script>   
-	 <script src="build/js/OrbitControls.js"></script>		
-	<script src="build/js/scene.js"></script>		
-	<script src="build/js/part.js"></script>		
-	<script src="build/js/craft.js"></script>		
-	<script src="build/js/main.js"></script>		
+  
+    <script>
+      var path = './build/js';
+      var fs = require('fs');
 
-	<script>
-  var path = './build/js';
-  var fs = require('fs');
+      fs.watch(path, function() {
+        if (location)
+          location.reload();
+      });
+    </script>
+    
+    <style>
+      body {
+          background-image: url("424562.jpg");
+      }
+/*      html,body{
+          height:100%;    
+          margin:0;
+          padding:0;
+          border:0;
+      }*/
+    </style>
+    
+    <script src="build/js/three.js"></script>   
+    <script src="build/js/OrbitControls.js"></script>    
+    <script src="build/js/scene.js"></script>   
+    <script src="build/js/part.js"></script>    
+    <script src="build/js/craft.js"></script>   
+    <script src="build/js/main.js"></script>    
 
-  fs.watch(path, function() {
-    if (location)
-      location.reload();
-  });
-</script>
   </body>
 </html>

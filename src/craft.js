@@ -17,6 +17,7 @@
 
 const PythonShell = require('python-shell');
 const _ = require('underscore');
+const EOL = require('os').EOL;
 class Craft {
 
 	
@@ -30,14 +31,17 @@ class Craft {
 	// //Need to rewrite .craft parser in js
 	parse(craftPath, cb){
 		let options = {
-				scriptPath: 'E:\\projects\\CraftViewer\\',
+				scriptPath: process.cwd(),
 				args:[craftPath]
 		};
 		PythonShell.run('craftToJSON.py', options, (err, results) => {
+			console.log(results.join('\n'));
+				const craft = JSON.parse(results.join('\n'));
+				console.log(craft);
 			if (err) {
 				cb(err);
 			} else {
-				const craft = JSON.parse(results.join('\n'));
+				// const craft = JSON.parse(results.join('\n'));
 				this.info = craft.VESSEL;
 				this.parts = _.omit(craft, 'VESSEL');
 				cb(false);
@@ -68,9 +72,11 @@ class Craft {
 					console.log('Error loading part');
 					console.log(err);
 				}
+				if (part === 'PART1') {
+					this.mesh.position.set(0,0,0);
+				}
 			});
 		}
-		this.mesh.position.y -= 30;
 
 	}
 

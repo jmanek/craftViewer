@@ -18,7 +18,7 @@ module.exports = function(grunt) {
       }
     },
     exec: {
-      nwjs: 'nwjs\\nw.exe .'
+      nwjs: 'npm start'
     },
     babel: {
         options: {

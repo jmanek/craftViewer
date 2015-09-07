@@ -997,7 +997,8 @@ class Mu:
     def read_vector(self):
         v = self.read_float(3)
         #convert from Unity's LHS to Blender's RHS
-        v = v[0], v[2], v[1]
+        # v = v[0], v[1], -v[2]
+        v = v[0], v[1], v[2]
         return v
 
     def read_quaternion(self):
@@ -1005,12 +1006,14 @@ class Mu:
         # Unity is xyzw, blender is wxyz. However, Unity is left-handed and
         # blender is right handed. To convert between LH and RH (either
         # direction), just swap y and z and reverse the rotation direction.
-        q = q[3], -q[0], -q[2], -q[1]
+        # q = q[2], q[3], q[0], q[1]
+        q = q[0], q[1], q[2], q[3]
         return q
 
     def read_tangent(self):
         t = self.read_float(4)
-        t = t[0], t[2], t[1], -t[3]
+        # t = t[2], t[3], t[0], t[1]
+        t = t[0], t[1], t[2], t[3]
         return t
 
     def read_bytes(self, size):

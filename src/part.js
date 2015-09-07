@@ -7,8 +7,10 @@ class Part {
 		this.name = name;
 
 		this.pos = data.pos.split(',');
+		this.pos = [for (v of this.pos) parseFloat(v)];
 
 		this.rot = data.rot.split(',');
+		this.pos = [for (v of this.rot) parseFloat(v)];
 	}
 
 	//Handles lhs => rhs
@@ -16,12 +18,18 @@ class Part {
 	posVec(vec){
 		vec = [for (v of vec) parseFloat(v)];
 		const vec3 = new THREE.Vector3(vec[0], vec[1], vec[2]);
-		vec3.setZ(-1.0*vec3.z);
+		// vec3.setZ(-1.0*vec3.z);
 		return vec3
 		// return new THREE.Vector3(vec[0], vec[1], vec[2]);
 	}
 	scaleVec(vec){
 		return new THREE.Vector3(vec[0], vec[1], vec[2]);
+	}
+	rhsVec3(vec) {
+		return new THREE.Vector3(vec[0], vec[1], -vec[2]);
+	}
+	rhsQuat(quat) {
+		return new THREE.Quaternion(quat[2], quat[3], quat[0], quat[1]);
 	}
 	rotQuat(quat) {
 		console.log('quat');
@@ -29,12 +37,13 @@ class Part {
 		quat = [for (q of quat) parseFloat(q)];
 		console.log(quat);
 		let rot = new THREE.Quaternion(quat[0], quat[1], quat[2], quat[3]);
-		rot = new THREE.Matrix4().makeRotationFromQuaternion(rot);
-		rot.elements[2] = -1.0*rot.elements[2]
-		rot.elements[6] = -1.0*rot.elements[6]
-		rot.elements[8] = -1.0*rot.elements[8]
-		rot.elements[9] = -1.0*rot.elements[9]
-		return new THREE.Quaternion().setFromRotationMatrix(rot);
+		return rot
+		// rot = new THREE.Matrix4().makeRotationFromQuaternion(rot);
+		// rot.elements[2] = -1.0*rot.elements[2]
+		// rot.elements[6] = -1.0*rot.elements[6]
+		// rot.elements[8] = -1.0*rot.elements[8]
+		// rot.elements[9] = -1.0*rot.elements[9]
+		// return new THREE.Quaternion().setFromRotationMatrix(rot);
 		// quat = new THREE.Quaternion(quat[2], quat[3], quat[0], quat[1]);
 		// console.log(quat);
 		// return quat;
@@ -51,32 +60,47 @@ class Part {
 
 	}
 
-	threeVec(vec){
-		// const v = THREE.Vector3(vec[0], vec[1], vec[2]);
-		vec = [for (v of vec) parseFloat(v)];
-		const vec3 = new THREE.Vector3(-1.0*vec[0], vec[1], vec[2]);
+	vec3(vec){
+		// const v = new THREE.Vector3(vec[0], vec[1], vec[2]);
+		// vec = [for (v of vec) parseFloat(v)];
+		// const vec3 = new THREE.Vector3(-1.0*vec[0], vec[1], vec[2]);
 		// vec3.setZ(-1.0*vec3.z);
-		return vec3
+
+		return new THREE.Vector3(vec[0], vec[1], vec[2]);
 	}
+
+	face3(f) {
+		return new THREE.Face3(f[0], f[1], f[2])
+	}
+
+
+
+	createMeshObj(geometry, model) {
+		let mesh
+		if (!geometry) {
+			mesh = new THREE.Object3D();
+		}
+
+	}
+
 
 
 	createSubMesh(model, parent){
 		let mesh;
-		if (model.verts.length == 0) {
+		if (model.verts.length == 0 || model.collider) {
 			mesh = new THREE.Object3D();
 		} else {
 			
 			const geometry = new THREE.Geometry();
 			for (let v of model.verts){
-				geometry.vertices.push(this.threeVec(v));
+				geometry.vertices.push(this.vec3(v));
 			}
 			for (let f of model.faces){
-				geometry.faces.push( new THREE.Face3(f[0], f[1], f[2]))
+				geometry.faces.push(this.face3(f))
 			}
 			mesh = new THREE.Mesh(geometry);
 		}
 
-		parent.add(mesh)
 		
 		model.localScale = [for (rot of model.localScale) parseFloat(rot)];
 		mesh.scale.set(model.localScale[0], model.localScale[1], model.localScale[2]);
@@ -90,25 +114,39 @@ class Part {
 		// console.log(mesh.position);
 		// console.log(mesh.scale);
 
+		parent.add(mesh)
 		for (let child of model.children) {
 			this.createSubMesh(child, mesh);
 		}
 	}
 
-	createMesh(model, parent){
-		if (model.collider) { return; }
+	createGeometry(model) {
+		const geometry = new THREE.Geometry();
+		for (let v of model.verts){
+			geometry.vertices.push(this.vec3(v));
+		}
+		for (let f of model.faces){
+			geometry.faces.push(this.face3(f));
+		}
+		return geometry;
+	}
+
+	createMaterial(model) {
+		return new THREE.MeshPhongMaterial( { color: 0xdddddd, specular: 0x009900, shininess: 30, shading: THREE.FlatShading, side:THREE.BackSide} );
+		// return new THREE.MeshPhongMaterial( {color:0xdddddd, side:THREE.DoubleSide} );
+	}
+
+
+	createMesh(model, parent, root=null){
+		// let geo = createGeometry(model);
+		// let mat = createMat(model);
 		let mesh;
-		if (model.verts.length == 0) {
+		if (model.verts.length == 0 || model.collider) {
 			mesh = new THREE.Object3D();
 		} else {
-			const geometry = new THREE.Geometry();
-			for (let v of model.verts){
-				geometry.vertices.push(this.threeVec(v));
-			}
-			for (let f of model.faces){
-				geometry.faces.push( new THREE.Face3(f[0], f[1], f[2]))
-			}
-			mesh = new THREE.Mesh(geometry);
+			const geometry = this.createGeometry(model);
+			const material = this.createMaterial(model);
+			mesh = new THREE.Mesh(geometry, material);
 		}
 		
 		model.localScale = [for (rot of model.localScale) parseFloat(rot)];
@@ -120,25 +158,28 @@ class Part {
 		model.localPos = [for (rot of model.localPos) parseFloat(rot)];
 		mesh.position.set(model.localPos[0], model.localPos[1], model.localPos[2]);
 
-
-		this.mesh = mesh;
-		parent.add(this.mesh);
+		parent.add(mesh);
 
 		for (let child of model.children) {
-			this.createSubMesh(child, this.mesh);
+			this.createMesh(child, mesh);
 		}
 		
+		if (root) {
+			this.mesh = mesh;
+			this.mesh.rotation.copy(this.rhsQuat(this.rot));
+			this.mesh.position.copy(this.rhsVec3(this.pos));
+		}
 		// mesh.rotation.x -= 90;
-		this.mesh.quaternion.multiply(this.rotQuat((this.rot)));
+		// this.mesh.quaternion.multiply(this.rotQuat((this.rot)));
 		// mesh.scale
-		this.mesh.position.copy(this.posVec(this.pos));
 	}
 
 
 	load(parent, cb) {
-		let muPath = 'E:\\Program Files\\Steam\\steamapps\\common\\Kerbal Space Program' + parts[this.name]; 
+		// let muPath = process.cwd() + '/mu/liquidEngineLV-909/model.mu'; 
+		let muPath = '/media/jesse/Data1/Program Files/Steam/steamapps/common/Kerbal Space Program' + parts[this.name]; 
 		let options = {
-				scriptPath: 'E:\\projects\\CraftViewer\\',
+				scriptPath: process.cwd(),
 				args:[muPath]
 		};
 		PythonShell.run('muParser.py', options, (err, results) => {
@@ -149,7 +190,7 @@ class Part {
 				cb(err);
 			} else {
 				// console.log(JSON.parse(results[0]));
-				this.createMesh(JSON.parse(results[0]), parent);
+				this.createMesh(JSON.parse(results[0]), parent, true);
 				// this.info = craft.VESSEL;
 				// this.parts = _.omit(craft, 'VESSEL');
 				cb(false);

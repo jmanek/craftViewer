@@ -23,6 +23,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var PythonShell = require('python-shell');
 var _ = require('underscore');
+var EOL = require('os').EOL;
 
 var Craft = (function () {
 	function Craft() {
@@ -39,14 +40,17 @@ var Craft = (function () {
 			var _this = this;
 
 			var options = {
-				scriptPath: 'E:\\projects\\CraftViewer\\',
+				scriptPath: process.cwd(),
 				args: [craftPath]
 			};
 			PythonShell.run('craftToJSON.py', options, function (err, results) {
+				console.log(results.join('\n'));
+				var craft = JSON.parse(results.join('\n'));
+				console.log(craft);
 				if (err) {
 					cb(err);
 				} else {
-					var craft = JSON.parse(results.join('\n'));
+					// const craft = JSON.parse(results.join('\n'));
 					_this.info = craft.VESSEL;
 					_this.parts = _.omit(craft, 'VESSEL');
 					cb(false);
@@ -56,6 +60,7 @@ var Craft = (function () {
 	}, {
 		key: 'loadParts',
 		value: function loadParts() {
+			var _this2 = this;
 
 			//Create Part objects
 			for (var part in this.parts) {
@@ -72,15 +77,22 @@ var Craft = (function () {
 			this.mesh.position.set(this.parts.PART1.pos[0], this.parts.PART1.pos[1], this.parts.PART1.pos[2]);
 			scene.add(this.mesh);
 			//Load mesh for each part
-			for (var part in this.parts) {
-				this.parts[part].load(this.mesh, function (err) {
+
+			var _loop = function (part) {
+				_this2.parts[part].load(_this2.mesh, function (err) {
 					if (err) {
 						console.log('Error loading part');
 						console.log(err);
 					}
+					if (part === 'PART1') {
+						_this2.mesh.position.set(0, 0, 0);
+					}
 				});
+			};
+
+			for (var part in this.parts) {
+				_loop(part);
 			}
-			this.mesh.position.y -= 30;
 		}
 	}]);
 

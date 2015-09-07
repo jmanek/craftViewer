@@ -1,6 +1,7 @@
 
 var craft = new Craft();
-craft.parse('E:\\projects\\CraftViewer\\test.craft', (err) => {
+function loadCraft() {
+craft.parse(process.cwd() + '/kerbalx.craft', (err) => {
 	if (err) {
 		console.log(err);
 	} else {
@@ -10,4 +11,7 @@ craft.parse('E:\\projects\\CraftViewer\\test.craft', (err) => {
 	}
 	
 });
+
+}
+loadCraft();
 // craft.parse('E:\\projects\\CraftViewer\\Kerbal X.craft');	

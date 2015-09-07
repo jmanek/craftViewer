@@ -4,14 +4,17 @@
   "description": "",
   "main": "index.html",
   "window": {
-    "title": ".craft viewer",
+    "position": "center",
+    "toolbar": "false",
+    "frame": "false",
     "width": 1600,
     "height": 900,
-    "toolbar": "false",
-    "frame": "false"
-
+    "min_width": 800,
+    "min_height": 450,
+    "show": "false"
   },
   "scripts": {
+    "start": "nw",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -23,5 +26,8 @@
     "grunt-contrib-watch": "^0.6.1",
     "grunt-exec": "^0.4.6",
     "load-grunt-tasks": "^3.2.0"
+  },
+  "dependencies": {
+    "nw": "^0.12.3"
   }
 }
