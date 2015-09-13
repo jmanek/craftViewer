@@ -17,7 +17,7 @@
 
 const PythonShell = require('python-shell');
 const _ = require('underscore');
-const EOL = require('os').EOL;
+const async = require('async');
 class Craft {
 
 	
@@ -28,32 +28,59 @@ class Craft {
 
 
 	// //Takes in a .craft file and populates craft with with part/val entries
-	// //Need to rewrite .craft parser in js
 	parse(craftPath, cb){
-		let options = {
-				scriptPath: process.cwd(),
-				args:[craftPath]
-		};
-		PythonShell.run('craftToJSON.py', options, (err, results) => {
-			console.log(results.join('\n'));
-				const craft = JSON.parse(results.join('\n'));
-				console.log(craft);
-			if (err) {
-				cb(err);
-			} else {
-				// const craft = JSON.parse(results.join('\n'));
-				this.info = craft.VESSEL;
-				this.parts = _.omit(craft, 'VESSEL');
-				cb(false);
-			}
+		ConfigNode.parse(craftPath, (err, node) => {
+			if (err) cb (err);
+			this.parts = node;
+			cb();
 		});
+		// let options = {
+		// 		scriptPath: process.cwd(),
+		// 		args:[craftPath]
+		// };
+		// PythonShell.run('craftToJSON.py', options, (err, results) => {
+			// console.log(results.join('\n'));
+				// const craft = JSON.parse(results.join('\n'));
+				// console.log(craft);
+			// if (err) {
+			// 	cb(err);
+			// } else {
+			// 	// const craft = JSON.parse(results.join('\n'));
+			// 	// this.info = craft.VESSEL;
+			// 	cb(false);
+			// }
+	}
+
+	center() {
+		// let box;
+		// this.mesh.traverse(function(obj){
+		// 	var geometry = obj.geometry;
+		// 	if (!geometry) return;
+		// 	geometry.computeBoundingBox();
+		// 	const objBox = geometry.boundingBox.clone();
+		// 	objBox.applyMatrix4(obj.matrixWorld);
+		// 	if (box) {
+		// 		console.log(objBox.center());
+		// 		box = box.union(objBox);
+		// 		console.log(box.center());
+		// 	} else {
+		// 		console.log('nobox');
+		// 		box = objBox;
+		// 	}
+		// });
+		// console.log(box.center());
+		// console.log(box.center());
+		// this.mesh.position.sub(box.center());
+		const box = new THREE.Box3().setFromObject(this.mesh);
+		scene.setTarget(box.center());
 	}
 
 	loadParts(){
 
 		//Create Part objects
 		for(let part in this.parts){
-			const name = this.parts[part].part.split('_').shift();
+			if (part.indexOf('PART') === -1) continue;
+			const name = this.parts[part].part.split('_').shift().replace(/\./g, '_');
 			console.log(name);
 			if (_.contains(['strutConnector, fuelLine, launchClamp1'], name)) {
 				this.parts[part] = new Part(this.parts[part], name);
@@ -63,21 +90,22 @@ class Craft {
 			}
 		}
 		this.mesh = new THREE.Object3D();
-		this.mesh.position.set( this.parts.PART1.pos[0], this.parts.PART1.pos[1], this.parts.PART1.pos[2] );
 		scene.add(this.mesh);
 		//Load mesh for each part
-		for(let part in this.parts){
-			this.parts[part].load(this.mesh, (err) => {
+		async.forEachOf(this.parts, (part, partName, cb) => {
+			if (partName.indexOf('PART') === -1) return cb();
+			part.load(this.mesh, (err) => { 
 				if (err) {
 					console.log('Error loading part');
-					console.log(err);
+					console.log(partName);
+					console.log(part)
 				}
-				if (part === 'PART1') {
-					this.mesh.position.set(0,0,0);
-				}
-			});
-		}
-
+				cb(err)
+			}); 
+		}, (err) => {
+			if (err) console.log(err)
+			this.center();
+		});
 	}
 
 }

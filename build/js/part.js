@@ -50,8 +50,8 @@ var Part = (function () {
 		})();
 
 		this.rot = data.rot.split(',');
-		this.pos = (function () {
-			var _pos2 = [];
+		this.rot = (function () {
+			var _rot = [];
 			var _iteratorNormalCompletion2 = true;
 			var _didIteratorError2 = false;
 			var _iteratorError2 = undefined;
@@ -60,7 +60,7 @@ var Part = (function () {
 				for (var _iterator2 = _this.rot[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
 					var v = _step2.value;
 
-					_pos2.push(parseFloat(v));
+					_rot.push(parseFloat(v));
 				}
 			} catch (err) {
 				_didIteratorError2 = true;
@@ -77,7 +77,7 @@ var Part = (function () {
 				}
 			}
 
-			return _pos2;
+			return _rot;
 		})();
 	}
 
@@ -134,7 +134,15 @@ var Part = (function () {
 	}, {
 		key: 'rhsQuat',
 		value: function rhsQuat(quat) {
-			return new THREE.Quaternion(quat[2], quat[3], quat[0], quat[1]);
+			// return new THREE.Quaternion(quat[2], quat[3], quat[0], quat[1]);
+			// return new THREE.Quaternion(quat[0], quat[1], quat[2], quat[3]);
+			var rot = new THREE.Quaternion(quat[0], quat[1], quat[2], quat[3]);
+			rot = new THREE.Matrix4().makeRotationFromQuaternion(rot);
+			rot.elements[2] = -1.0 * rot.elements[2];
+			rot.elements[6] = -1.0 * rot.elements[6];
+			rot.elements[8] = -1.0 * rot.elements[8];
+			rot.elements[9] = -1.0 * rot.elements[9];
+			return new THREE.Quaternion().setFromRotationMatrix(rot);
 		}
 	}, {
 		key: 'rotQuat',
@@ -171,14 +179,6 @@ var Part = (function () {
 				return _quat;
 			})();
 			console.log(quat);
-			var rot = new THREE.Quaternion(quat[0], quat[1], quat[2], quat[3]);
-			return rot;
-			// rot = new THREE.Matrix4().makeRotationFromQuaternion(rot);
-			// rot.elements[2] = -1.0*rot.elements[2]
-			// rot.elements[6] = -1.0*rot.elements[6]
-			// rot.elements[8] = -1.0*rot.elements[8]
-			// rot.elements[9] = -1.0*rot.elements[9]
-			// return new THREE.Quaternion().setFromRotationMatrix(rot);
 			// quat = new THREE.Quaternion(quat[2], quat[3], quat[0], quat[1]);
 			// console.log(quat);
 			// return quat;
@@ -508,8 +508,6 @@ var Part = (function () {
 				return _model$localScale2;
 			})();
 			mesh.scale.set(model.localScale[0], model.localScale[1], model.localScale[2]);
-			// mesh.quaternion.set(this.rotQuat(model.localRot));
-			// mesh.position.set(this.posVec(model.localPos));
 			model.localRot = (function () {
 				var _model$localRot2 = [];
 				var _iteratorNormalCompletion14 = true;
@@ -598,11 +596,8 @@ var Part = (function () {
 				}
 			}
 
-			if (root) {
-				this.mesh = mesh;
-				this.mesh.rotation.copy(this.rhsQuat(this.rot));
-				this.mesh.position.copy(this.rhsVec3(this.pos));
-			}
+			if (root) this.mesh = mesh;
+
 			// mesh.rotation.x -= 90;
 			// this.mesh.quaternion.multiply(this.rotQuat((this.rot)));
 			// mesh.scale
@@ -612,25 +607,18 @@ var Part = (function () {
 		value: function load(parent, cb) {
 			var _this2 = this;
 
-			// let muPath = process.cwd() + '/mu/liquidEngineLV-909/model.mu';
-			var muPath = '/media/jesse/Data1/Program Files/Steam/steamapps/common/Kerbal Space Program' + parts[this.name];
-			var options = {
-				scriptPath: process.cwd(),
-				args: [muPath]
-			};
-			PythonShell.run('muParser.py', options, function (err, results) {
-				// console.log(err);
-				// console.log(results);
+			fileManager.loadPart(this.name, function (err, mu, partInfo) {
 				if (err) {
-					console.log('ee');
-					cb(err);
-				} else {
-					// console.log(JSON.parse(results[0]));
-					_this2.createMesh(JSON.parse(results[0]), parent, true);
-					// this.info = craft.VESSEL;
-					// this.parts = _.omit(craft, 'VESSEL');
-					cb(false);
+					console.log(err);
+					return cb(err);
 				}
+				_this2.createMesh(mu, parent, true);
+
+				_this2.mesh.scale.set(partInfo.scale, partInfo.scale, partInfo.scale);
+				// this.mesh.rotation.copy(this.rhsQuat(this.rot));
+				_this2.mesh.position.copy(_this2.rhsVec3(_this2.pos));
+
+				cb();
 			});
 		}
 	}]);

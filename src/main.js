@@ -1,17 +1,23 @@
+const scene = new Scene();
+const craft = new Craft();
+const fileManager = new FileManager('E:/Program Files/Steam/steamapps/common/Kerbal Space Program/GameData/Squad/');
 
-var craft = new Craft();
 function loadCraft() {
-craft.parse(process.cwd() + '/kerbalx.craft', (err) => {
-	if (err) {
-		console.log(err);
-	} else {
-		console.log('.craft loaded');
-		craft.loadParts();
+	craft.parse(process.cwd() + '/kerbal X.craft', (err) => {
+		if (err) {
+			console.log(err);
+		} else {
+			console.log('.craft loaded');
+			craft.loadParts();
 
-	}
-	
-});
-
+		}
+		
+	});
 }
-loadCraft();
-// craft.parse('E:\\projects\\CraftViewer\\Kerbal X.craft');	
+
+
+fileManager.findParts((err) => {
+	if (err) console.log(err);
+	loadCraft();
+});
+// loadCraft();

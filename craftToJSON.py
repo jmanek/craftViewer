@@ -19,7 +19,10 @@ def convertCraft(craftFile):
 				craftOut.write(checkNL(line))
 				craftOut.write(checkNL('}\n'))
 				craftOut.seek(0)
-				print(craftOut.read())
+				craft = craftOut.read()
+				with open('kerbalx.json', 'w+') as tmp:
+					tmp.write(craft) 
+				print(craft)
 				return
 
 			
@@ -56,6 +59,7 @@ def convertCraft(craftFile):
 					else:
 						craftOut.write(checkNL(makeString(line)).replace('\n', ',\n'))
 def checkNL(line):
+	line = line.replace('\r', '')
 	return line if '\n' in line else line + '\n'
 
 def makeString(line):

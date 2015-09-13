@@ -10,7 +10,7 @@ class Part {
 		this.pos = [for (v of this.pos) parseFloat(v)];
 
 		this.rot = data.rot.split(',');
-		this.pos = [for (v of this.rot) parseFloat(v)];
+		this.rot = [for (v of this.rot) parseFloat(v)];
 	}
 
 	//Handles lhs => rhs
@@ -29,21 +29,21 @@ class Part {
 		return new THREE.Vector3(vec[0], vec[1], -vec[2]);
 	}
 	rhsQuat(quat) {
-		return new THREE.Quaternion(quat[2], quat[3], quat[0], quat[1]);
+		// return new THREE.Quaternion(quat[2], quat[3], quat[0], quat[1]);
+		// return new THREE.Quaternion(quat[0], quat[1], quat[2], quat[3]);
+		let rot = new THREE.Quaternion(quat[0], quat[1], quat[2], quat[3]);
+		rot = new THREE.Matrix4().makeRotationFromQuaternion(rot);
+		rot.elements[2] = -1.0*rot.elements[2]
+		rot.elements[6] = -1.0*rot.elements[6]
+		rot.elements[8] = -1.0*rot.elements[8]
+		rot.elements[9] = -1.0*rot.elements[9]
+		return new THREE.Quaternion().setFromRotationMatrix(rot);
 	}
 	rotQuat(quat) {
 		console.log('quat');
 		console.log(quat);
 		quat = [for (q of quat) parseFloat(q)];
 		console.log(quat);
-		let rot = new THREE.Quaternion(quat[0], quat[1], quat[2], quat[3]);
-		return rot
-		// rot = new THREE.Matrix4().makeRotationFromQuaternion(rot);
-		// rot.elements[2] = -1.0*rot.elements[2]
-		// rot.elements[6] = -1.0*rot.elements[6]
-		// rot.elements[8] = -1.0*rot.elements[8]
-		// rot.elements[9] = -1.0*rot.elements[9]
-		// return new THREE.Quaternion().setFromRotationMatrix(rot);
 		// quat = new THREE.Quaternion(quat[2], quat[3], quat[0], quat[1]);
 		// console.log(quat);
 		// return quat;
@@ -151,8 +151,6 @@ class Part {
 		
 		model.localScale = [for (rot of model.localScale) parseFloat(rot)];
 		mesh.scale.set(model.localScale[0], model.localScale[1], model.localScale[2]);
-		// mesh.quaternion.set(this.rotQuat(model.localRot));
-		// mesh.position.set(this.posVec(model.localPos));
 		model.localRot = [for (rot of model.localRot) parseFloat(rot)];
 		mesh.quaternion.set(model.localRot[0], model.localRot[1], model.localRot[2], model.localRot[3]);
 		model.localPos = [for (rot of model.localPos) parseFloat(rot)];
@@ -164,11 +162,8 @@ class Part {
 			this.createMesh(child, mesh);
 		}
 		
-		if (root) {
-			this.mesh = mesh;
-			this.mesh.rotation.copy(this.rhsQuat(this.rot));
-			this.mesh.position.copy(this.rhsVec3(this.pos));
-		}
+		if (root) this.mesh = mesh;
+
 		// mesh.rotation.x -= 90;
 		// this.mesh.quaternion.multiply(this.rotQuat((this.rot)));
 		// mesh.scale
@@ -176,25 +171,19 @@ class Part {
 
 
 	load(parent, cb) {
-		// let muPath = process.cwd() + '/mu/liquidEngineLV-909/model.mu'; 
-		let muPath = '/media/jesse/Data1/Program Files/Steam/steamapps/common/Kerbal Space Program' + parts[this.name]; 
-		let options = {
-				scriptPath: process.cwd(),
-				args:[muPath]
-		};
-		PythonShell.run('muParser.py', options, (err, results) => {
-			// console.log(err);
-			// console.log(results);
+
+		fileManager.loadPart(this.name, (err, mu, partInfo) => {
 			if (err) {
-				console.log('ee');
-				cb(err);
-			} else {
-				// console.log(JSON.parse(results[0]));
-				this.createMesh(JSON.parse(results[0]), parent, true);
-				// this.info = craft.VESSEL;
-				// this.parts = _.omit(craft, 'VESSEL');
-				cb(false);
+				console.log(err);
+				return cb(err);
 			}
+			this.createMesh(mu, parent, true);
+
+			this.mesh.scale.set(partInfo.scale, partInfo.scale, partInfo.scale);
+			// this.mesh.rotation.copy(this.rhsQuat(this.rot));
+			this.mesh.position.copy(this.rhsVec3(this.pos));
+
+			cb();
 		});
 	}
 }

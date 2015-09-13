@@ -28,6 +28,8 @@
     "load-grunt-tasks": "^3.2.0"
   },
   "dependencies": {
+    "async": "^1.4.2",
+    "glob": "^5.0.14",
     "nw": "^0.12.3"
   }
 }

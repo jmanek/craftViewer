@@ -23,7 +23,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var PythonShell = require('python-shell');
 var _ = require('underscore');
-var EOL = require('os').EOL;
+var async = require('async');
 
 var Craft = (function () {
 	function Craft() {
@@ -32,30 +32,57 @@ var Craft = (function () {
 	// this.craft;
 
 	// //Takes in a .craft file and populates craft with with part/val entries
-	// //Need to rewrite .craft parser in js
 
 	_createClass(Craft, [{
 		key: 'parse',
 		value: function parse(craftPath, cb) {
 			var _this = this;
 
-			var options = {
-				scriptPath: process.cwd(),
-				args: [craftPath]
-			};
-			PythonShell.run('craftToJSON.py', options, function (err, results) {
-				console.log(results.join('\n'));
-				var craft = JSON.parse(results.join('\n'));
-				console.log(craft);
-				if (err) {
-					cb(err);
-				} else {
-					// const craft = JSON.parse(results.join('\n'));
-					_this.info = craft.VESSEL;
-					_this.parts = _.omit(craft, 'VESSEL');
-					cb(false);
-				}
+			ConfigNode.parse(craftPath, function (err, node) {
+				if (err) cb(err);
+				_this.parts = node;
+				cb();
 			});
+			// let options = {
+			// 		scriptPath: process.cwd(),
+			// 		args:[craftPath]
+			// };
+			// PythonShell.run('craftToJSON.py', options, (err, results) => {
+			// console.log(results.join('\n'));
+			// const craft = JSON.parse(results.join('\n'));
+			// console.log(craft);
+			// if (err) {
+			// 	cb(err);
+			// } else {
+			// 	// const craft = JSON.parse(results.join('\n'));
+			// 	// this.info = craft.VESSEL;
+			// 	cb(false);
+			// }
+		}
+	}, {
+		key: 'center',
+		value: function center() {
+			// let box;
+			// this.mesh.traverse(function(obj){
+			// 	var geometry = obj.geometry;
+			// 	if (!geometry) return;
+			// 	geometry.computeBoundingBox();
+			// 	const objBox = geometry.boundingBox.clone();
+			// 	objBox.applyMatrix4(obj.matrixWorld);
+			// 	if (box) {
+			// 		console.log(objBox.center());
+			// 		box = box.union(objBox);
+			// 		console.log(box.center());
+			// 	} else {
+			// 		console.log('nobox');
+			// 		box = objBox;
+			// 	}
+			// });
+			// console.log(box.center());
+			// console.log(box.center());
+			// this.mesh.position.sub(box.center());
+			var box = new THREE.Box3().setFromObject(this.mesh);
+			scene.setTarget(box.center());
 		}
 	}, {
 		key: 'loadParts',
@@ -64,7 +91,8 @@ var Craft = (function () {
 
 			//Create Part objects
 			for (var part in this.parts) {
-				var _name = this.parts[part].part.split('_').shift();
+				if (part.indexOf('PART') === -1) continue;
+				var _name = this.parts[part].part.split('_').shift().replace(/\./g, '_');
 				console.log(_name);
 				if (_.contains(['strutConnector, fuelLine, launchClamp1'], _name)) {
 					this.parts[part] = new Part(this.parts[part], _name);
@@ -74,25 +102,22 @@ var Craft = (function () {
 					}
 			}
 			this.mesh = new THREE.Object3D();
-			this.mesh.position.set(this.parts.PART1.pos[0], this.parts.PART1.pos[1], this.parts.PART1.pos[2]);
 			scene.add(this.mesh);
 			//Load mesh for each part
-
-			var _loop = function (part) {
-				_this2.parts[part].load(_this2.mesh, function (err) {
+			async.forEachOf(this.parts, function (part, partName, cb) {
+				if (partName.indexOf('PART') === -1) return cb();
+				part.load(_this2.mesh, function (err) {
 					if (err) {
 						console.log('Error loading part');
-						console.log(err);
+						console.log(partName);
+						console.log(part);
 					}
-					if (part === 'PART1') {
-						_this2.mesh.position.set(0, 0, 0);
-					}
+					cb(err);
 				});
-			};
-
-			for (var part in this.parts) {
-				_loop(part);
-			}
+			}, function (err) {
+				if (err) console.log(err);
+				_this2.center();
+			});
 		}
 	}]);
 
