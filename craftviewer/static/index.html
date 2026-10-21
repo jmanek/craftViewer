@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>craftViewer - KSP craft files</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d1420'/%3E%3Cpath d='M16 5l7 20H9z' fill='%2359c2f5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/static/style.css">
+<script type="importmap">
+  { "imports": { "three": "/static/vendor/three.module.js" } }
+</script>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand"><span class="logo">&#9650;</span> craftViewer</div>
+    <div class="root" id="root-path">locating KSP&hellip;</div>
+    <div class="spacer"></div>
+    <div class="stats" id="stats"></div>
+    <button id="btn-reload" class="btn ghost" title="Re-scan GameData and saves">Rescan</button>
+  </header>
+
+  <aside>
+    <div class="search">
+      <input id="search" type="search" placeholder="Search .craft files&hellip;" autocomplete="off" spellcheck="false">
+    </div>
+    <div id="craft-list" class="craft-list"></div>
+    <div class="sidebar-foot" id="sidebar-foot"></div>
+  </aside>
+
+  <main>
+    <canvas id="view"></canvas>
+
+    <div class="banner hidden" id="banner"></div>
+
+    <div class="panel craft-info hidden" id="craft-info"></div>
+
+    <div class="panel controls hidden" id="controls">
+      <button class="btn" data-action="frame" title="Frame the craft (F)">Frame</button>
+      <button class="btn" data-action="wireframe" title="Wireframe (W)">Wireframe</button>
+      <button class="btn" data-action="grid" title="Toggle grid (G)">Grid</button>
+      <button class="btn" data-action="shot" title="Save a PNG screenshot (S)">Screenshot</button>
+    </div>
+
+    <div class="progress hidden" id="progress">
+      <div class="progress-inner"><div class="progress-bar" id="progress-bar"></div></div>
+      <span id="progress-label"></span>
+    </div>
+
+    <div class="tooltip hidden" id="tooltip"></div>
+    <div class="hint" id="hint">drag to orbit &middot; scroll to zoom &middot; right-drag to pan</div>
+  </main>
+</div>
+<script type="module" src="/static/app.js"></script>
+</body>
+</html>

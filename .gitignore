@@ -1,3 +1,9 @@
 /mu
 *.mu
 /node_modules
+__pycache__/
+*.pyc
+
+# craftViewer: generated demo install + model cache
+craftviewer/demo/
+craftviewer/cache/
